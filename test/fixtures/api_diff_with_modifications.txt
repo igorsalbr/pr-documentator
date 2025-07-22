@@ -1,0 +1,123 @@
+diff --git a/src/controllers/userController.js b/src/controllers/userController.js
+index a1b2c3d..f4e5g6h 100644
+--- a/src/controllers/userController.js
++++ b/src/controllers/userController.js
+@@ -1,5 +1,6 @@
+ const express = require('express');
+ const { body, validationResult } = require('express-validator');
++const rateLimit = require('express-rate-limit');
+ const User = require('../models/User');
+ 
+ const router = express.Router();
+@@ -10,10 +11,20 @@ const router = express.Router();
+  * @desc Create a new user
+  * @access Public
+  */
++
++// Rate limiting for user creation
++const createUserLimiter = rateLimit({
++  windowMs: 15 * 60 * 1000, // 15 minutes
++  max: 5, // limit each IP to 5 requests per windowMs
++  message: 'Too many user creation attempts, please try again later'
++});
++
+ router.post('/api/v1/users', [
++  createUserLimiter,
+   body('name').notEmpty().withMessage('Name is required'),
+   body('email').isEmail().withMessage('Valid email is required'),
+-  body('role').optional().isIn(['user', 'admin']).withMessage('Role must be user or admin')
++  body('role').optional().isIn(['user', 'admin', 'moderator']).withMessage('Role must be user, admin, or moderator'),
++  body('age').optional().isInt({ min: 18 }).withMessage('Age must be at least 18')
+ ], async (req, res) => {
+   try {
+     const errors = validationResult(req);
+@@ -24,7 +35,7 @@ router.post('/api/v1/users', [
+       });
+     }
+ 
+-    const { name, email, role = 'user' } = req.body;
++    const { name, email, role = 'user', age } = req.body;
+     
+     const user = new User({
+       name,
+@@ -39,6 +50,7 @@ router.post('/api/v1/users', [
+       name: user.name,
+       email: user.email,
+       role: user.role,
++      age: user.age,
+       created_at: user.created_at
+     });
+   } catch (error) {
+@@ -77,10 +89,15 @@ router.get('/api/v1/users/:id', async (req, res) => {
+  */
+ router.put('/api/v1/users/:id', [
+   body('name').optional().notEmpty().withMessage('Name cannot be empty'),
+   body('email').optional().isEmail().withMessage('Valid email is required'),
++  body('role').optional().isIn(['user', 'admin', 'moderator']).withMessage('Role must be user, admin, or moderator'),
++  body('age').optional().isInt({ min: 18 }).withMessage('Age must be at least 18')
+ ], async (req, res) => {
+-  // Implementation for update user
++  try {
++    // Full implementation for update user
++    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
++    res.json(updatedUser);
++  } catch (error) {
++    res.status(500).json({ error: 'Internal server error' });
++  }
+ });
+
+diff --git a/src/controllers/adminController.js b/src/controllers/adminController.js
+new file mode 100644
+index 0000000..h7i8j9k
+--- /dev/null
++++ b/src/controllers/adminController.js
+@@ -0,0 +1,45 @@
++const express = require('express');
++const User = require('../models/User');
++const auth = require('../middleware/auth');
++
++const router = express.Router();
++
++/**
++ * @route GET /api/v1/admin/users
++ * @desc Get all users (admin only)
++ * @access Private
++ */
++router.get('/api/v1/admin/users', auth.requireAdmin, async (req, res) => {
++  try {
++    const page = parseInt(req.query.page) || 1;
++    const limit = parseInt(req.query.limit) || 10;
++    const skip = (page - 1) * limit;
++    
++    const users = await User.find({})
++      .select('-password')
++      .skip(skip)
++      .limit(limit)
++      .sort({ created_at: -1 });
++      
++    const total = await User.countDocuments();
++    
++    res.json({
++      users,
++      pagination: {
++        page,
++        limit, 
++        total,
++        pages: Math.ceil(total / limit)
++      }
++    });
++  } catch (error) {
++    res.status(500).json({ error: 'Internal server error' });
++  }
++});
++
++/**
++ * @route DELETE /api/v1/admin/users/:id
++ * @desc Delete user (admin only)  
++ * @access Private
++ */
++router.delete('/api/v1/admin/users/:id', auth.requireAdmin, async (req, res) => {
++  // Implementation for delete user
++});
++
++module.exports = router;

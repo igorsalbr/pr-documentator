@@ -1,0 +1,77 @@
+{
+  "action": "synchronize",
+  "number": 123,
+  "pull_request": {
+    "id": 1234567890,
+    "number": 123,
+    "state": "open",
+    "title": "Add user management API endpoints",
+    "body": "Updated PR: Added validation and error handling to user endpoints.\n\n## Changes in this update:\n- Added input validation for all endpoints\n- Improved error responses\n- Added rate limiting middleware\n- Updated API documentation",
+    "user": {
+      "id": 12345,
+      "login": "developer",
+      "avatar_url": "https://github.com/images/error/developer_happy.gif",
+      "html_url": "https://github.com/developer"
+    },
+    "head": {
+      "label": "feature/user-management-api",
+      "ref": "feature/user-management-api", 
+      "sha": "new456def789ghi012jkl345mno678pqr901stu234",
+      "user": {
+        "id": 12345,
+        "login": "developer",
+        "html_url": "https://github.com/developer"
+      },
+      "repo": {
+        "id": 987654321,
+        "name": "my-api-project",
+        "full_name": "developer/my-api-project",
+        "html_url": "https://github.com/developer/my-api-project"
+      }
+    },
+    "base": {
+      "label": "main",
+      "ref": "main",
+      "sha": "xyz987wvu654tsr321qpo098nml876kji543hgf210", 
+      "user": {
+        "id": 12345,
+        "login": "developer",
+        "html_url": "https://github.com/developer"
+      },
+      "repo": {
+        "id": 987654321,
+        "name": "my-api-project", 
+        "full_name": "developer/my-api-project",
+        "html_url": "https://github.com/developer/my-api-project"
+      }
+    },
+    "diff_url": "https://github.com/developer/my-api-project/pull/123.diff",
+    "patch_url": "https://github.com/developer/my-api-project/pull/123.patch",
+    "html_url": "https://github.com/developer/my-api-project/pull/123",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T11:45:00Z",
+    "merged_at": null
+  },
+  "repository": {
+    "id": 987654321,
+    "name": "my-api-project",
+    "full_name": "developer/my-api-project", 
+    "owner": {
+      "id": 12345,
+      "login": "developer",
+      "avatar_url": "https://github.com/images/error/developer_happy.gif",
+      "html_url": "https://github.com/developer"
+    },
+    "html_url": "https://github.com/developer/my-api-project",
+    "clone_url": "https://github.com/developer/my-api-project.git",
+    "ssh_url": "git@github.com:developer/my-api-project.git"
+  },
+  "sender": {
+    "id": 12345,
+    "login": "developer",
+    "avatar_url": "https://github.com/images/error/developer_happy.gif", 
+    "html_url": "https://github.com/developer"
+  },
+  "before": "abc123def456ghi789jkl012mno345pqr678stu901",
+  "after": "new456def789ghi012jkl345mno678pqr901stu234"
+}

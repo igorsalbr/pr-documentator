@@ -1,0 +1,110 @@
+diff --git a/src/controllers/userController.js b/src/controllers/userController.js
+new file mode 100644
+index 0000000..a1b2c3d
+--- /dev/null
++++ b/src/controllers/userController.js
+@@ -0,0 +1,85 @@
++const express = require('express');
++const { body, validationResult } = require('express-validator');
++const User = require('../models/User');
++
++const router = express.Router();
++
++/**
++ * @route POST /api/v1/users
++ * @desc Create a new user
++ * @access Public
++ */
++router.post('/api/v1/users', [
++  body('name').notEmpty().withMessage('Name is required'),
++  body('email').isEmail().withMessage('Valid email is required'),
++  body('role').optional().isIn(['user', 'admin']).withMessage('Role must be user or admin')
++], async (req, res) => {
++  try {
++    const errors = validationResult(req);
++    if (!errors.isEmpty()) {
++      return res.status(400).json({
++        error: 'Validation failed',
++        details: errors.array()
++      });
++    }
++
++    const { name, email, role = 'user' } = req.body;
++    
++    const user = new User({
++      name,
++      email,
++      role,
++      created_at: new Date()
++    });
++    
++    await user.save();
++    
++    res.status(201).json({
++      id: user._id,
++      name: user.name,
++      email: user.email,
++      role: user.role,
++      created_at: user.created_at
++    });
++  } catch (error) {
++    res.status(500).json({ error: 'Internal server error' });
++  }
++});
++
++/**
++ * @route GET /api/v1/users/:id
++ * @desc Get user by ID
++ * @access Public
++ */
++router.get('/api/v1/users/:id', async (req, res) => {
++  try {
++    const user = await User.findById(req.params.id);
++    if (!user) {
++      return res.status(404).json({ error: 'User not found' });
++    }
++    
++    res.json({
++      id: user._id,
++      name: user.name,
++      email: user.email,
++      role: user.role,
++      created_at: user.created_at
++    });
++  } catch (error) {
++    res.status(500).json({ error: 'Internal server error' });
++  }
++});
++
++/**
++ * @route PUT /api/v1/users/:id
++ * @desc Update user
++ * @access Public
++ */
++router.put('/api/v1/users/:id', [
++  body('name').optional().notEmpty().withMessage('Name cannot be empty'),
++  body('email').optional().isEmail().withMessage('Valid email is required'),
++], async (req, res) => {
++  // Implementation for update user
++});
++
++module.exports = router;
+
+diff --git a/src/routes/index.js b/src/routes/index.js
+index e1234f5..f6789ab 100644
+--- a/src/routes/index.js
++++ b/src/routes/index.js
+@@ -1,4 +1,5 @@
+ const express = require('express');
++const userController = require('../controllers/userController');
+ 
+ const router = express.Router();
+ 
+@@ -6,4 +7,7 @@ router.get('/health', (req, res) => {
+   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+ });
+ 
++// User routes
++router.use(userController);
++
+ module.exports = router;
