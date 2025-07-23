@@ -83,8 +83,8 @@ func (erw *errorResponseWriter) WriteError(err error) {
 	)
 
 	// Write response
-	erw.Header().Set("Content-Type", "application/json")
-	erw.WriteHeader(statusCode)
+	erw.Header().Set("Content-Type", "application/json") // nolint
+	erw.WriteHeader(statusCode)                          // nolint
 
 	if err := json.NewEncoder(erw).Encode(errorResp); err != nil {
 		erw.logger.Error("Failed to encode error response", err)

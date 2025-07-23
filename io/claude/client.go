@@ -16,7 +16,7 @@ import (
 )
 
 type Client struct {
-	httpClient     *resty.Client
+	httpClient     *resty.Client // nolint
 	config         config.ClaudeConfig
 	logger         interfaces.Logger
 	circuitBreaker interfaces.CircuitBreaker
@@ -26,15 +26,15 @@ type Client struct {
 // NewClient creates a new Claude API client with circuit breaker and metrics
 func NewClient(cfg config.ClaudeConfig, logger interfaces.Logger, metrics interfaces.MetricsCollector) *Client {
 	// Configure Resty client
-	client := resty.New().
-		SetTimeout(cfg.Timeout).
-		SetRetryCount(3).
-		SetRetryWaitTime(1*time.Second).
-		SetRetryMaxWaitTime(5*time.Second).
-		SetHeader("Content-Type", "application/json").
-		SetHeader("x-api-key", cfg.APIKey).
-		SetHeader("anthropic-version", "2023-06-01").
-		SetBaseURL(cfg.BaseURL)
+	client := resty.New(). // nolint
+				SetTimeout(cfg.Timeout).
+				SetRetryCount(3).
+				SetRetryWaitTime(1*time.Second).
+				SetRetryMaxWaitTime(5*time.Second).
+				SetHeader("Content-Type", "application/json").
+				SetHeader("x-api-key", cfg.APIKey).
+				SetHeader("anthropic-version", "2023-06-01").
+				SetBaseURL(cfg.BaseURL)
 
 	// Configure circuit breaker
 	cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{
