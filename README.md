@@ -1117,5 +1117,3 @@ echo "🎉 Configuração válida!"
 - **🐛 Issues**: [GitHub Issues](https://github.com/igorsal/pr-documentator/issues)
 - **💬 Discussões**: [GitHub Discussions](https://github.com/igorsal/pr-documentator/discussions)
 - **📧 Email**: suporte@pr-documentator.com
-
-**Desenvolvido com ❤️ usando Go e Claude AI**
