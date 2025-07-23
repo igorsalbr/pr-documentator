@@ -70,3 +70,4 @@ coverage.out
 # Build artifacts
 *.tar.gz
 *.zip
+working_workspace.txt

@@ -35,7 +35,7 @@ clean: ## Clean build artifacts and temporary files
 dev: gen-certs ## Run the application with hot reload (requires air: go install github.com/cosmtrek/air@latest)
 	@if ! command -v air >/dev/null 2>&1; then \
 		echo "📦 Installing air for hot reload..."; \
-		go install github.com/cosmtrek/air@latest; \
+		go install github.com/air-verse/air@latest; \
 	fi
 	@echo "🚀 Starting development server with hot reload..."
 	@air -c .air.toml
@@ -105,7 +105,7 @@ docker-run: ## Run application in Docker
 # Installation commands
 install-tools: ## Install development tools
 	@echo "🛠️  Installing development tools..."
-	@go install github.com/cosmtrek/air@latest
+	@go install github.com/air-verse/air@latest
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@echo "✅ Development tools installed"
 

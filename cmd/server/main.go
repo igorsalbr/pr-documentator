@@ -41,7 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	app.logger.Info("Starting PR Documentator service", 
+	app.logger.Info("Starting PR Documentator service",
 		"version", "2.0.0",
 		"environment", os.Getenv("ENVIRONMENT"),
 	)
@@ -93,6 +93,7 @@ func (app *Application) setupServer() {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(app.logger, app.metrics)
 	prAnalyzerHandler := handlers.NewPRAnalyzerHandler(app.analyzerService, app.logger, app.metrics)
+	testChange := handlers.NewTestHandler(app.logger, app.metrics)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -107,6 +108,7 @@ func (app *Application) setupServer() {
 	// Public endpoints
 	router.HandleFunc("/health", healthHandler.Handle).Methods("GET")
 	router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	router.HandleFunc("/test", testChange.Handle).Methods("GET")
 
 	// Protected endpoints
 	prRouter := router.PathPrefix("").Subrouter()

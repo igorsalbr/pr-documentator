@@ -1067,7 +1067,7 @@ echo "🎉 Configuração válida!"
 - **⚡ [Circuit Breaker](https://github.com/sony/gobreaker)**: Proteção contra falhas em cascata
 - **📊 [Prometheus](https://github.com/prometheus/client_golang)**: Métricas e observabilidade
 - **🏗️ [Dependency Injection](https://github.com/igorsal/pr-documentator/tree/main/internal/interfaces)**: Interfaces para arquitetura limpa
-- **⚡ [Air](https://github.com/cosmtrek/air)**: Hot reload para desenvolvimento Go
+- **⚡ [Air](https://github.com/air-verse/air)**: Hot reload para desenvolvimento Go
 - **🧪 [Testify](https://github.com/stretchr/testify)**: Framework de testes
 
 ### Melhores Práticas
