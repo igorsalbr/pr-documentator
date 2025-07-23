@@ -1102,11 +1102,13 @@ echo "🎉 Configuração válida!"
 
 #### 💡 Ideias Futuras
 
+- Getzao nas apis existentes do postman antes pra decidir add update ou delete
+- Add manual webhook passing .diff url
 - Suporte a outros LLMs (OpenAI, Google, xai)
 - Prepare for real deployment
-- Add manual webhook passing .diff url
 - Improve agent prompt and function structure
 - Add easier local development setup
+- Slack or Discord notifications for PR analysis
 
 
 
