@@ -21,7 +21,7 @@ func (a *Adapter) Debug(msg string, fields ...interface{}) {
 	a.logger.Debug(msg, fields...)
 }
 
-// Info logs an info message with optional fields  
+// Info logs an info message with optional fields
 func (a *Adapter) Info(msg string, fields ...interface{}) {
 	a.logger.Info(msg, fields...)
 }

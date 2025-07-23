@@ -47,7 +47,7 @@ func (h *PRAnalyzerHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Info("Received GitHub PR webhook", 
+	h.logger.Info("Received GitHub PR webhook",
 		"pr_number", payload.PullRequest.Number,
 		"repo", payload.Repository.FullName,
 		"action", payload.Action,
@@ -57,7 +57,7 @@ func (h *PRAnalyzerHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	// Analyze the PR
 	analysisResp, err := h.analyzerService.AnalyzePR(r.Context(), payload)
 	if err != nil {
-		h.logger.Error("Failed to analyze PR", err, 
+		h.logger.Error("Failed to analyze PR", err,
 			"pr_number", payload.PullRequest.Number,
 			"repo", payload.Repository.FullName,
 		)
@@ -79,7 +79,7 @@ func (h *PRAnalyzerHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Info("PR analysis completed successfully", 
+	h.logger.Info("PR analysis completed successfully",
 		"pr_number", payload.PullRequest.Number,
 		"new_routes", len(analysisResp.NewRoutes),
 		"modified_routes", len(analysisResp.ModifiedRoutes),

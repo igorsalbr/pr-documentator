@@ -10,11 +10,11 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Claude   ClaudeConfig
-	Postman  PostmanConfig
-	GitHub   GitHubConfig
-	Logging  LoggingConfig
+	Server  ServerConfig
+	Claude  ClaudeConfig
+	Postman PostmanConfig
+	GitHub  GitHubConfig
+	Logging LoggingConfig
 }
 
 type ServerConfig struct {
@@ -27,11 +27,11 @@ type ServerConfig struct {
 }
 
 type ClaudeConfig struct {
-	APIKey     string
-	Model      string
-	MaxTokens  int
-	BaseURL    string
-	Timeout    time.Duration
+	APIKey    string
+	Model     string
+	MaxTokens int
+	BaseURL   string
+	Timeout   time.Duration
 }
 
 type PostmanConfig struct {

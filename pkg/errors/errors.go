@@ -9,23 +9,23 @@ import (
 type ErrorType string
 
 const (
-	ErrorTypeValidation    ErrorType = "validation"
-	ErrorTypeNotFound      ErrorType = "not_found"
-	ErrorTypeUnauthorized  ErrorType = "unauthorized"
-	ErrorTypeExternal      ErrorType = "external"
-	ErrorTypeInternal      ErrorType = "internal"
-	ErrorTypeRateLimit     ErrorType = "rate_limit"
-	ErrorTypeTimeout       ErrorType = "timeout"
-	ErrorTypeUnavailable   ErrorType = "unavailable"
+	ErrorTypeValidation   ErrorType = "validation"
+	ErrorTypeNotFound     ErrorType = "not_found"
+	ErrorTypeUnauthorized ErrorType = "unauthorized"
+	ErrorTypeExternal     ErrorType = "external"
+	ErrorTypeInternal     ErrorType = "internal"
+	ErrorTypeRateLimit    ErrorType = "rate_limit"
+	ErrorTypeTimeout      ErrorType = "timeout"
+	ErrorTypeUnavailable  ErrorType = "unavailable"
 )
 
 // AppError represents a structured application error
 type AppError struct {
-	Type       ErrorType `json:"type"`
-	Message    string    `json:"message"`
-	Code       string    `json:"code,omitempty"`
-	StatusCode int       `json:"status_code"`
-	Cause      error     `json:"-"`
+	Type       ErrorType              `json:"type"`
+	Message    string                 `json:"message"`
+	Code       string                 `json:"code,omitempty"`
+	StatusCode int                    `json:"status_code"`
+	Cause      error                  `json:"-"`
 	Context    map[string]interface{} `json:"context,omitempty"`
 }
 

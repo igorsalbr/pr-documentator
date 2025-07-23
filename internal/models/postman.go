@@ -4,14 +4,14 @@ import "time"
 
 // PostmanCollection represents a Postman collection
 type PostmanCollection struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Schema      string               `json:"schema"`
-	Items       []PostmanItem        `json:"item"`
-	Variables   []PostmanVariable    `json:"variable,omitempty"`
-	Auth        *PostmanAuth         `json:"auth,omitempty"`
-	Info        PostmanInfo          `json:"info"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Schema      string            `json:"schema"`
+	Items       []PostmanItem     `json:"item"`
+	Variables   []PostmanVariable `json:"variable,omitempty"`
+	Auth        *PostmanAuth      `json:"auth,omitempty"`
+	Info        PostmanInfo       `json:"info"`
 }
 
 // PostmanInfo contains collection metadata
@@ -24,23 +24,23 @@ type PostmanInfo struct {
 
 // PostmanItem represents a request item in Postman
 type PostmanItem struct {
-	ID          string              `json:"id,omitempty"`
-	Name        string              `json:"name"`
-	Description string              `json:"description,omitempty"`
-	Request     *PostmanRequest     `json:"request,omitempty"`
-	Response    []PostmanResponse   `json:"response,omitempty"`
-	Items       []PostmanItem       `json:"item,omitempty"` // For folders
-	Event       []PostmanEvent      `json:"event,omitempty"`
+	ID          string            `json:"id,omitempty"`
+	Name        string            `json:"name"`
+	Description string            `json:"description,omitempty"`
+	Request     *PostmanRequest   `json:"request,omitempty"`
+	Response    []PostmanResponse `json:"response,omitempty"`
+	Items       []PostmanItem     `json:"item,omitempty"` // For folders
+	Event       []PostmanEvent    `json:"event,omitempty"`
 }
 
 // PostmanRequest represents a request in Postman
 type PostmanRequest struct {
-	Method      string            `json:"method"`
-	Header      []PostmanHeader   `json:"header,omitempty"`
-	Body        *PostmanBody      `json:"body,omitempty"`
-	URL         PostmanURL        `json:"url"`
-	Auth        *PostmanAuth      `json:"auth,omitempty"`
-	Description string            `json:"description,omitempty"`
+	Method      string          `json:"method"`
+	Header      []PostmanHeader `json:"header,omitempty"`
+	Body        *PostmanBody    `json:"body,omitempty"`
+	URL         PostmanURL      `json:"url"`
+	Auth        *PostmanAuth    `json:"auth,omitempty"`
+	Description string          `json:"description,omitempty"`
 }
 
 // PostmanURL represents a URL in Postman
@@ -93,12 +93,12 @@ type PostmanAuth struct {
 
 // PostmanResponse represents a response example
 type PostmanResponse struct {
-	Name           string          `json:"name"`
-	OriginalRequest PostmanRequest `json:"originalRequest"`
-	Status         string          `json:"status"`
-	Code           int             `json:"code"`
-	Header         []PostmanHeader `json:"header"`
-	Body           string          `json:"body"`
+	Name            string          `json:"name"`
+	OriginalRequest PostmanRequest  `json:"originalRequest"`
+	Status          string          `json:"status"`
+	Code            int             `json:"code"`
+	Header          []PostmanHeader `json:"header"`
+	Body            string          `json:"body"`
 }
 
 // PostmanEvent represents an event (pre-request, test)

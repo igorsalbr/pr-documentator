@@ -13,19 +13,19 @@ type GitHubPRPayload struct {
 
 // PullRequest represents a GitHub pull request
 type PullRequest struct {
-	ID        int       `json:"id"`
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	Body      string    `json:"body"`
-	State     string    `json:"state"`
-	User      User      `json:"user"`
-	Head      Branch    `json:"head"`
-	Base      Branch    `json:"base"`
-	DiffURL   string    `json:"diff_url"`
-	PatchURL  string    `json:"patch_url"`
-	HTMLURL   string    `json:"html_url"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int        `json:"id"`
+	Number    int        `json:"number"`
+	Title     string     `json:"title"`
+	Body      string     `json:"body"`
+	State     string     `json:"state"`
+	User      User       `json:"user"`
+	Head      Branch     `json:"head"`
+	Base      Branch     `json:"base"`
+	DiffURL   string     `json:"diff_url"`
+	PatchURL  string     `json:"patch_url"`
+	HTMLURL   string     `json:"html_url"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 	MergedAt  *time.Time `json:"merged_at,omitempty"`
 }
 

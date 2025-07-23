@@ -341,9 +341,9 @@ func (c *Client) convertRouteToPostmanItem(route models.APIRoute) models.Postman
 		Name:        fmt.Sprintf("%s %s", route.Method, route.Path),
 		Description: route.Description,
 		Request: &models.PostmanRequest{
-			Method:      route.Method,
-			Header:      headers,
-			Body:        body,
+			Method: route.Method,
+			Header: headers,
+			Body:   body,
 			URL: models.PostmanURL{
 				Raw:   fmt.Sprintf("{{baseUrl}}%s", route.Path),
 				Host:  []string{"{{baseUrl}}"},
@@ -358,12 +358,12 @@ func (c *Client) convertRouteToPostmanItem(route models.APIRoute) models.Postman
 
 func (c *Client) updateExistingItem(collection *models.PostmanCollection, route models.APIRoute) bool {
 	routeName := fmt.Sprintf("%s %s", route.Method, route.Path)
-	
+
 	for i, item := range collection.Items {
-		if item.Name == routeName || (item.Request != nil && 
-			item.Request.Method == route.Method && 
+		if item.Name == routeName || (item.Request != nil &&
+			item.Request.Method == route.Method &&
 			item.Request.URL.Raw == fmt.Sprintf("{{baseUrl}}%s", route.Path)) {
-			
+
 			// Update the existing item
 			collection.Items[i] = c.convertRouteToPostmanItem(route)
 			return true
@@ -374,24 +374,24 @@ func (c *Client) updateExistingItem(collection *models.PostmanCollection, route 
 
 func (c *Client) markItemAsDeprecated(collection *models.PostmanCollection, route models.APIRoute) bool {
 	routeName := fmt.Sprintf("%s %s", route.Method, route.Path)
-	
+
 	for i, item := range collection.Items {
-		if item.Name == routeName || (item.Request != nil && 
-			item.Request.Method == route.Method && 
+		if item.Name == routeName || (item.Request != nil &&
+			item.Request.Method == route.Method &&
 			item.Request.URL.Raw == fmt.Sprintf("{{baseUrl}}%s", route.Path)) {
-			
+
 			// Mark as deprecated by adding to description
 			if collection.Items[i].Description == "" {
 				collection.Items[i].Description = "[DEPRECATED] This endpoint is deprecated."
 			} else {
 				collection.Items[i].Description = "[DEPRECATED] " + collection.Items[i].Description
 			}
-			
+
 			// Also update the name
 			if collection.Items[i].Name != "" && collection.Items[i].Name[:12] != "[DEPRECATED]" {
 				collection.Items[i].Name = "[DEPRECATED] " + collection.Items[i].Name
 			}
-			
+
 			return true
 		}
 	}

@@ -9,12 +9,12 @@ type AnalysisRequest struct {
 
 // AnalysisResponse represents the structured response from Claude
 type AnalysisResponse struct {
-	NewRoutes      []APIRoute     `json:"new_routes"`
-	ModifiedRoutes []APIRoute     `json:"modified_routes"`
-	DeletedRoutes  []APIRoute     `json:"deleted_routes"`
-	Summary        string         `json:"summary"`
-	Confidence     float64        `json:"confidence"`
-	PostmanUpdate  PostmanUpdate  `json:"postman_update"`
+	NewRoutes      []APIRoute    `json:"new_routes"`
+	ModifiedRoutes []APIRoute    `json:"modified_routes"`
+	DeletedRoutes  []APIRoute    `json:"deleted_routes"`
+	Summary        string        `json:"summary"`
+	Confidence     float64       `json:"confidence"`
+	PostmanUpdate  PostmanUpdate `json:"postman_update"`
 }
 
 // APIRoute represents an API route with its details
@@ -51,11 +51,11 @@ type Header struct {
 
 // PostmanUpdate represents the result of updating Postman
 type PostmanUpdate struct {
-	CollectionID   string `json:"collection_id"`
-	Status         string `json:"status"` // success, error, partial
-	ItemsAdded     int    `json:"items_added"`
-	ItemsModified  int    `json:"items_modified"`
-	ItemsDeleted   int    `json:"items_deleted"`
-	ErrorMessage   string `json:"error_message,omitempty"`
-	UpdatedAt      string `json:"updated_at"`
+	CollectionID  string `json:"collection_id"`
+	Status        string `json:"status"` // success, error, partial
+	ItemsAdded    int    `json:"items_added"`
+	ItemsModified int    `json:"items_modified"`
+	ItemsDeleted  int    `json:"items_deleted"`
+	ErrorMessage  string `json:"error_message,omitempty"`
+	UpdatedAt     string `json:"updated_at"`
 }

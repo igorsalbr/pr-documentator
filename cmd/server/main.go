@@ -41,7 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	app.logger.Info("Starting PR Documentator service", 
+	app.logger.Info("Starting PR Documentator service",
 		"version", "2.0.0",
 		"environment", os.Getenv("ENVIRONMENT"),
 	)

@@ -31,7 +31,7 @@ func ErrorHandlerMiddleware(logger interfaces.Logger) func(http.Handler) http.Ha
 				logger:         logger,
 				request:        r,
 			}
-			
+
 			next.ServeHTTP(errorWriter, r)
 		})
 	}
@@ -85,7 +85,7 @@ func (erw *errorResponseWriter) WriteError(err error) {
 	// Write response
 	erw.Header().Set("Content-Type", "application/json")
 	erw.WriteHeader(statusCode)
-	
+
 	if err := json.NewEncoder(erw).Encode(errorResp); err != nil {
 		erw.logger.Error("Failed to encode error response", err)
 		// Fallback to plain text
@@ -112,11 +112,11 @@ func PanicRecoveryMiddleware(logger interfaces.Logger) func(http.Handler) http.H
 						logger:         logger,
 						request:        r,
 					}
-					
+
 					errorWriter.WriteError(pkgerrors.NewInternalError("Internal server error"))
 				}
 			}()
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}

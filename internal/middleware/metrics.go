@@ -13,16 +13,16 @@ func MetricsMiddleware(metrics interfaces.MetricsCollector) func(http.Handler) h
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			
+
 			// Wrap ResponseWriter to capture status code
 			wrapped := &metricsResponseWriter{
 				ResponseWriter: w,
 				statusCode:     http.StatusOK,
 			}
-			
+
 			// Process request
 			next.ServeHTTP(wrapped, r)
-			
+
 			// Record metrics
 			duration := time.Since(start).Seconds()
 			labels := map[string]string{
@@ -30,7 +30,7 @@ func MetricsMiddleware(metrics interfaces.MetricsCollector) func(http.Handler) h
 				"endpoint":    r.URL.Path,
 				"status_code": strconv.Itoa(wrapped.statusCode),
 			}
-			
+
 			metrics.IncrementCounter("http_requests_total", labels)
 			metrics.RecordDuration("http_request_duration_seconds", duration, labels)
 		})

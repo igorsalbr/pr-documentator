@@ -48,7 +48,7 @@ func GitHubWebhookAuth(secret string, logger interfaces.Logger) func(http.Handle
 
 			// Create a new request with the body restored
 			r.Body = io.NopCloser(strings.NewReader(string(body)))
-			
+
 			logger.Debug("GitHub webhook signature validated successfully")
 			next.ServeHTTP(w, r)
 		})

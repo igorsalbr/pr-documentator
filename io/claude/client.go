@@ -92,8 +92,8 @@ func (c *Client) AnalyzePR(ctx context.Context, req models.AnalysisRequest) (*mo
 		"repository": req.Repository.FullName,
 	}
 
-	c.logger.Info("Starting PR analysis with Claude", 
-		"pr_number", req.PullRequest.Number, 
+	c.logger.Info("Starting PR analysis with Claude",
+		"pr_number", req.PullRequest.Number,
 		"repo", req.Repository.FullName,
 		"circuit_breaker_state", c.circuitBreaker.State(),
 	)
@@ -110,10 +110,10 @@ func (c *Client) AnalyzePR(ctx context.Context, req models.AnalysisRequest) (*mo
 	if err != nil {
 		labels["status"] = "error"
 		c.metrics.IncrementCounter("claude_requests_total", labels)
-		
+
 		// Classify error type
 		if gobreaker.StateOpen == c.circuitBreaker.(*circuitBreakerWrapper).cb.State() {
-			c.logger.Error("Claude API circuit breaker open", err, 
+			c.logger.Error("Claude API circuit breaker open", err,
 				"pr_number", req.PullRequest.Number,
 				"state", c.circuitBreaker.State(),
 			)
@@ -128,8 +128,8 @@ func (c *Client) AnalyzePR(ctx context.Context, req models.AnalysisRequest) (*mo
 	c.metrics.IncrementCounter("claude_requests_total", labels)
 
 	analysisResp := result.(*models.AnalysisResponse)
-	
-	c.logger.Info("Successfully analyzed PR with Claude", 
+
+	c.logger.Info("Successfully analyzed PR with Claude",
 		"pr_number", req.PullRequest.Number,
 		"new_routes", len(analysisResp.NewRoutes),
 		"modified_routes", len(analysisResp.ModifiedRoutes),
@@ -145,7 +145,7 @@ func (c *Client) AnalyzePR(ctx context.Context, req models.AnalysisRequest) (*mo
 func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest) (*models.AnalysisResponse, error) {
 	prompt := buildAnalysisPrompt(req)
 	analysisToolSchema := buildAnalysisToolSchema()
-	
+
 	claudeReq := ClaudeRequest{
 		Model:     c.config.Model,
 		MaxTokens: c.config.MaxTokens,
@@ -156,7 +156,7 @@ func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest
 			},
 		},
 		System: systemPrompt,
-		Tools: []Tool{analysisToolSchema},
+		Tools:  []Tool{analysisToolSchema},
 		ToolChoice: map[string]interface{}{
 			"type": "tool",
 			"name": "analyze_api_changes",
@@ -176,7 +176,7 @@ func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest
 
 	if resp.IsError() {
 		errorMsg := fmt.Sprintf("HTTP %d: %s", resp.StatusCode(), string(resp.Body()))
-		
+
 		// Handle specific error cases
 		switch resp.StatusCode() {
 		case 401:
@@ -321,9 +321,9 @@ func buildAnalysisToolSchema() Tool {
 					Items: &Property{
 						Type: "object",
 						Properties: map[string]Property{
-							"method":      {Type: "string", Description: "HTTP method"},
-							"path":        {Type: "string", Description: "API endpoint path"},
-							"description": {Type: "string", Description: "Description of changes made"},
+							"method":       {Type: "string", Description: "HTTP method"},
+							"path":         {Type: "string", Description: "API endpoint path"},
+							"description":  {Type: "string", Description: "Description of changes made"},
 							"request_body": {Type: "object", Description: "Updated request body schema"},
 							"response":     {Type: "object", Description: "Updated response body schema"},
 						},
