@@ -1100,25 +1100,15 @@ echo "🎉 Configuração válida!"
 
 ### Roadmap
 
-#### 🚧 Próximas Funcionalidades
-
-- [ ] **Interface Web**: Dashboard para visualizar análises
-- [ ] **Múltiplas Coleções**: Suporte a várias coleções Postman
-- [ ] **Templates Personalizados**: Templates customizáveis para documentação
-- [ ] **Integração Slack**: Notificações em canais do Slack
-- [ ] **Cache Redis**: Cache distribuído para melhor performance
-- [ ] **Métricas Prometheus**: Integração com Prometheus/Grafana
-
 #### 💡 Ideias Futuras
 
-- Suporte a outros LLMs (OpenAI GPT, Google PaLM)
-- Integração com Swagger/OpenAPI
-- Análise de breaking changes
-- Geração automática de testes
+- Suporte a outros LLMs (OpenAI, Google, xai)
+- Prepare for real deployment
+- Add manual webhook passing .diff url
+- Improve agent prompt and function structure
+- Add easier local development setup
 
-### Licença
 
-Este projeto é licenciado sob a **MIT License**. Veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ---
 
