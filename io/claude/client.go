@@ -220,63 +220,46 @@ func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest
 
 func buildAnalysisPrompt(req models.AnalysisRequest) string {
 	return fmt.Sprintf(`
-Analyze the following GitHub Pull Request for API changes and provide a structured response.
+Por favor, analise o Pull Request do GitHub a seguir para identificar mudanças na API e forneça uma resposta estruturada.
 
-**Pull Request Details:**
-- Title: %s
-- Description: %s
-- Repository: %s
-- Number: %d
-- Diff URL: %s
+**Detalhes do Pull Request:**
+- **Título:** %s
+- **Descrição:** %s
+- **Repositório:** %s
+- **Número:** %d
+- **URL do Diff:** %s
 
-**Instructions:**
-1. Analyze the diff/changes for new API routes, modifications to existing routes, or deleted routes
-2. Look for changes in HTTP methods, endpoints, request/response payloads, headers, and parameters
-3. Identify route descriptions, parameter types, and example values where possible
-4. Provide confidence score (0-1) for your analysis
+**Instruções de Análise:**
+1. **Novas Rotas:** 
+   - Identifique novas rotas de API.
+   - Inclua método HTTP, caminho usando `+"`{{baseUrl}}`"+`, descrição, parâmetros, corpo da requisição e resposta.
+   - Exemplo: `+"`{{baseUrl}}/api/v1/users`"+`
 
-**Required JSON Response Format:**
-{
-  "new_routes": [
-    {
-      "method": "POST",
-      "path": "/api/v1/users",
-      "description": "Create a new user",
-      "parameters": [
-        {
-          "name": "name",
-          "in": "body",
-          "type": "string",
-          "required": true,
-          "description": "User's full name"
-        }
-      ],
-      "request_body": {
-        "name": "string",
-        "email": "string"
-      },
-      "response": {
-        "id": "string",
-        "name": "string",
-        "email": "string"
-      },
-      "headers": [
-        {
-          "name": "Content-Type",
-          "required": true,
-          "description": "Must be application/json"
-        }
-      ]
-    }
-  ],
-  "modified_routes": [],
-  "deleted_routes": [],
-  "summary": "Brief summary of changes",
-  "confidence": 0.95
-}
+2. **Rotas Modificadas:** 
+   - Detecte modificações em rotas existentes.
+   - Detalhe mudanças no método, caminho usando `+"`{{baseUrl}}`"+`, corpo da requisição e resposta.
 
-**Analysis Context:**
+3. **Rotas Deletadas:** 
+   - Liste as rotas deletadas ou depreciadas.
+   - Inclua o método, caminho usando `+"`{{baseUrl}}`"+` e razão para a remoção.
+
+4. **Documentação no Postman:**
+   - Certifique-se de que cada rota tem uma descrição clara e detalhada.
+   - Inclua exemplos de requisição e resposta.
+   - Use variáveis de ambiente como `+"`{{baseUrl}}`"+` para facilitar a configuração.
+
+5. **Confiança:** 
+   - Forneça uma pontuação de confiança (0-1) sobre a precisão da análise.
+
+**Contexto Adicional:**
 %s
+
+**Formato Esperado:**
+- **Novas Rotas:** [{ "method": "GET", "path": "{{baseUrl}}/api/v1/users", ... }]
+- **Rotas Modificadas:** [{ "method": "POST", "path": "{{baseUrl}}/api/v1/orders", ... }]
+- **Rotas Deletadas:** [{ "method": "DELETE", "path": "{{baseUrl}}/api/v1/products", ... }]
+- **Resumo:** "Breve resumo das mudanças."
+- **Confiança:** 0.9
 `, req.PullRequest.Title, req.PullRequest.Body, req.Repository.FullName, req.PullRequest.Number, req.PullRequest.DiffURL, req.Diff)
 }
 
