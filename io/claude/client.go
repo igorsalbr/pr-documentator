@@ -239,9 +239,7 @@ Por favor, analise o Pull Request do GitHub a seguir para identificar mudanças 
    - Detecte modificações em rotas existentes.
    - Detalhe mudanças no método, caminho usando `+"`{{baseUrl}}`"+`, corpo da requisição e resposta.
 
-3. **Rotas Deletadas:** 
-   - Liste as rotas deletadas ou depreciadas.
-   - Inclua o método, caminho usando `+"`{{baseUrl}}`"+` e razão para a remoção.
+
 
 4. **Documentação no Postman:**
    - Certifique-se de que cada rota tem uma descrição clara e detalhada.
@@ -256,8 +254,7 @@ Por favor, analise o Pull Request do GitHub a seguir para identificar mudanças 
 
 **Formato Esperado:**
 - **Novas Rotas:** [{ "method": "GET", "path": "{{baseUrl}}/api/v1/users", ... }]
-- **Rotas Modificadas:** [{ "method": "POST", "path": "{{baseUrl}}/api/v1/orders", ... }]
-- **Rotas Deletadas:** [{ "method": "DELETE", "path": "{{baseUrl}}/api/v1/products", ... }]
+- **Rotas Modificadas:** [{ "method": "POST", "path": "{{baseUrl}}/api/v1/orders", (new payload) ) }]
 - **Resumo:** "Breve resumo das mudanças."
 - **Confiança:** 0.9
 `, req.PullRequest.Title, req.PullRequest.Body, req.Repository.FullName, req.PullRequest.Number, req.PullRequest.DiffURL, req.Diff)
