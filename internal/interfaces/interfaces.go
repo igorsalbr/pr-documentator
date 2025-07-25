@@ -68,3 +68,11 @@ type ConfigProvider interface {
 	GetDuration(key string) string
 	Validate() error
 }
+
+// TokenManager defines the interface for session token management
+type TokenManager interface {
+	CreateSession(claudeAPIKey, postmanAPIKey, postmanWorkspaceID, postmanCollectionID string) (string, error)
+	GetSession(token string) (*models.UserSession, bool)
+	InvalidateSession(token string)
+	Stop()
+}

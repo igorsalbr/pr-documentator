@@ -320,10 +320,10 @@ func (s *AnalyzerService) hasAPIChanges(resp *models.AnalysisResponse) bool {
 // extractRoutesFromCollection extracts existing routes from Postman collection for context
 func (s *AnalyzerService) extractRoutesFromCollection(collection *models.PostmanCollection) []models.ExistingRoute {
 	var routes []models.ExistingRoute
-	
+
 	// Process items recursively to handle folders
 	s.extractRoutesFromItems(collection.Items, []string{}, &routes)
-	
+
 	return routes
 }
 
@@ -358,7 +358,7 @@ func (s *AnalyzerService) extractPathFromURL(url models.PostmanURL) string {
 		}
 		return path
 	}
-	
+
 	// Fallback to constructing from path segments
 	if len(url.Path) > 1 {
 		// Skip {{baseUrl}} if present
@@ -370,6 +370,6 @@ func (s *AnalyzerService) extractPathFromURL(url models.PostmanURL) string {
 			return "/" + pathSegments[0]
 		}
 	}
-	
+
 	return "/"
 }
