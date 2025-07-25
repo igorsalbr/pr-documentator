@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	TokenLength    = 32
-	TokenTTL       = 1 * time.Hour
+	TokenLength     = 32
+	TokenTTL        = 1 * time.Hour
 	CleanupInterval = 10 * time.Minute
 )
 
@@ -29,10 +29,10 @@ func NewTokenManager(logger interfaces.Logger) *TokenManager {
 		logger:   logger,
 		stopCh:   make(chan struct{}),
 	}
-	
+
 	// Start cleanup goroutine
 	go tm.cleanupExpired()
-	
+
 	return tm
 }
 
@@ -57,7 +57,7 @@ func (tm *TokenManager) CreateSession(claudeAPIKey, postmanAPIKey, postmanWorksp
 	tm.mu.Unlock()
 
 	tm.logger.Info("Created new user session", "token", token[:8]+"...", "expires_at", session.ExpiresAt)
-	
+
 	return token, nil
 }
 
@@ -80,7 +80,7 @@ func (tm *TokenManager) GetSession(token string) (*models.UserSession, bool) {
 func (tm *TokenManager) InvalidateSession(token string) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
-	
+
 	delete(tm.sessions, token)
 	tm.logger.Info("Invalidated user session", "token", token[:8]+"...")
 }

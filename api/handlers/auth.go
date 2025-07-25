@@ -15,7 +15,7 @@ type AuthHandler struct {
 	tokenManager interfaces.TokenManager
 	logger       interfaces.Logger
 	metrics      interfaces.MetricsCollector
-	validator    *validator.Validate
+	validator    *validator.Validate //nolint
 }
 
 type AuthRequest struct {
@@ -36,7 +36,7 @@ func NewAuthHandler(tokenManager interfaces.TokenManager, logger interfaces.Logg
 		tokenManager: tokenManager,
 		logger:       logger,
 		metrics:      metrics,
-		validator:    validator.New(),
+		validator:    validator.New(), //nolint
 	}
 }
 

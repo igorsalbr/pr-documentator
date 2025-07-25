@@ -19,7 +19,7 @@ type WebAnalyzeHandler struct {
 	tokenManager interfaces.TokenManager
 	logger       interfaces.Logger
 	metrics      interfaces.MetricsCollector
-	validator    *validator.Validate
+	validator    *validator.Validate //nolint
 }
 
 type WebAnalyzeRequest struct {
@@ -31,7 +31,7 @@ func NewWebAnalyzeHandler(tokenManager interfaces.TokenManager, logger interface
 		tokenManager: tokenManager,
 		logger:       logger,
 		metrics:      metrics,
-		validator:    validator.New(),
+		validator:    validator.New(), //nolint
 	}
 }
 

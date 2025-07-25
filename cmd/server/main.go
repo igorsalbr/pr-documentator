@@ -200,7 +200,7 @@ func (app *Application) gracefulShutdown() error {
 
 		// Close token manager
 		app.tokenManager.Stop()
-		
+
 		// Close other resources if needed (database connections, etc.)
 		app.logger.Info("All services shutdown successfully")
 		shutdownComplete <- nil
