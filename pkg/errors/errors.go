@@ -26,7 +26,7 @@ type AppError struct {
 	Code       string                 `json:"code,omitempty"`
 	StatusCode int                    `json:"status_code"`
 	Cause      error                  `json:"-"`
-	Context    map[string]interface{} `json:"context,omitempty"`
+	Context    map[string]any `json:"context,omitempty"`
 }
 
 func (e *AppError) Error() string {
@@ -40,9 +40,9 @@ func (e *AppError) Unwrap() error {
 	return e.Cause
 }
 
-func (e *AppError) WithContext(key string, value interface{}) *AppError {
+func (e *AppError) WithContext(key string, value any) *AppError {
 	if e.Context == nil {
-		e.Context = make(map[string]interface{})
+		e.Context = make(map[string]any)
 	}
 	e.Context[key] = value
 	return e
@@ -83,7 +83,7 @@ func NewExternalError(service, message string) *AppError {
 		Type:       ErrorTypeExternal,
 		Message:    fmt.Sprintf("%s service error: %s", service, message),
 		StatusCode: http.StatusBadGateway,
-		Context:    map[string]interface{}{"service": service},
+		Context:    map[string]any{"service": service},
 	}
 }
 
@@ -100,7 +100,7 @@ func NewRateLimitError(service string) *AppError {
 		Type:       ErrorTypeRateLimit,
 		Message:    fmt.Sprintf("Rate limit exceeded for %s", service),
 		StatusCode: http.StatusTooManyRequests,
-		Context:    map[string]interface{}{"service": service},
+		Context:    map[string]any{"service": service},
 	}
 }
 
@@ -109,7 +109,7 @@ func NewTimeoutError(service string, timeout string) *AppError {
 		Type:       ErrorTypeTimeout,
 		Message:    fmt.Sprintf("Timeout calling %s after %s", service, timeout),
 		StatusCode: http.StatusGatewayTimeout,
-		Context:    map[string]interface{}{"service": service, "timeout": timeout},
+		Context:    map[string]any{"service": service, "timeout": timeout},
 	}
 }
 
@@ -118,7 +118,7 @@ func NewUnavailableError(service string) *AppError {
 		Type:       ErrorTypeUnavailable,
 		Message:    fmt.Sprintf("Service %s is unavailable", service),
 		StatusCode: http.StatusServiceUnavailable,
-		Context:    map[string]interface{}{"service": service},
+		Context:    map[string]any{"service": service},
 	}
 }
 
@@ -143,3 +143,9 @@ func WrapError(err error, message string) *AppError {
 		Cause:      err,
 	}
 }
+
+// Type aliases for easier usage
+type ValidationError = AppError
+type UnauthorizedError = AppError
+type RateLimitError = AppError
+type UnavailableError = AppError

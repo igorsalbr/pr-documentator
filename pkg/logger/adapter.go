@@ -17,26 +17,26 @@ func NewAdapter(level, format string) interfaces.Logger {
 }
 
 // Debug logs a debug message with optional fields
-func (a *Adapter) Debug(msg string, fields ...interface{}) {
+func (a *Adapter) Debug(msg string, fields ...any) {
 	a.logger.Debug(msg, fields...)
 }
 
 // Info logs an info message with optional fields
-func (a *Adapter) Info(msg string, fields ...interface{}) {
+func (a *Adapter) Info(msg string, fields ...any) {
 	a.logger.Info(msg, fields...)
 }
 
 // Warn logs a warning message with optional fields
-func (a *Adapter) Warn(msg string, fields ...interface{}) {
+func (a *Adapter) Warn(msg string, fields ...any) {
 	a.logger.Warn(msg, fields...)
 }
 
 // Error logs an error message with optional fields
-func (a *Adapter) Error(msg string, err error, fields ...interface{}) {
+func (a *Adapter) Error(msg string, err error, fields ...any) {
 	a.logger.Error(msg, err, fields...)
 }
 
 // Fatal logs a fatal message and exits
-func (a *Adapter) Fatal(msg string, err error, fields ...interface{}) {
+func (a *Adapter) Fatal(msg string, err error, fields ...any) {
 	a.logger.Fatal(msg, err, fields...)
 }

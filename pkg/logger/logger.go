@@ -32,37 +32,37 @@ func New(level, format string) *Logger {
 	}
 }
 
-func (l *Logger) Info(msg string, fields ...interface{}) {
+func (l *Logger) Info(msg string, fields ...any) {
 	event := l.logger.Info()
 	l.addFields(event, fields...)
 	event.Msg(msg)
 }
 
-func (l *Logger) Error(msg string, err error, fields ...interface{}) {
+func (l *Logger) Error(msg string, err error, fields ...any) {
 	event := l.logger.Error().Err(err)
 	l.addFields(event, fields...)
 	event.Msg(msg)
 }
 
-func (l *Logger) Warn(msg string, fields ...interface{}) {
+func (l *Logger) Warn(msg string, fields ...any) {
 	event := l.logger.Warn()
 	l.addFields(event, fields...)
 	event.Msg(msg)
 }
 
-func (l *Logger) Debug(msg string, fields ...interface{}) {
+func (l *Logger) Debug(msg string, fields ...any) {
 	event := l.logger.Debug()
 	l.addFields(event, fields...)
 	event.Msg(msg)
 }
 
-func (l *Logger) Fatal(msg string, err error, fields ...interface{}) {
+func (l *Logger) Fatal(msg string, err error, fields ...any) {
 	event := l.logger.Fatal().Err(err)
 	l.addFields(event, fields...)
 	event.Msg(msg)
 }
 
-func (l *Logger) addFields(event *zerolog.Event, fields ...interface{}) {
+func (l *Logger) addFields(event *zerolog.Event, fields ...any) {
 	for i := 0; i < len(fields); i += 2 {
 		if i+1 < len(fields) {
 			key := fields[i].(string)

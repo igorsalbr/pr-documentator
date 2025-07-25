@@ -23,8 +23,8 @@ type APIRoute struct {
 	Path        string                 `json:"path"`
 	Description string                 `json:"description"`
 	Parameters  []Parameter            `json:"parameters,omitempty"`
-	RequestBody map[string]interface{} `json:"request_body,omitempty"`
-	Response    map[string]interface{} `json:"response,omitempty"`
+	RequestBody map[string]any `json:"request_body,omitempty"`
+	Response    map[string]any `json:"response,omitempty"`
 	Headers     []Header               `json:"headers,omitempty"`
 	Tags        []string               `json:"tags,omitempty"`
 	Deprecated  bool                   `json:"deprecated,omitempty"`
@@ -37,8 +37,8 @@ type Parameter struct {
 	Type        string      `json:"type"`
 	Required    bool        `json:"required"`
 	Description string      `json:"description"`
-	Default     interface{} `json:"default,omitempty"`
-	Example     interface{} `json:"example,omitempty"`
+	Default     any `json:"default,omitempty"`
+	Example     any `json:"example,omitempty"`
 }
 
 // Header represents an HTTP header
@@ -46,7 +46,7 @@ type Header struct {
 	Name        string      `json:"name"`
 	Required    bool        `json:"required"`
 	Description string      `json:"description"`
-	Example     interface{} `json:"example,omitempty"`
+	Example     any `json:"example,omitempty"`
 }
 
 // PostmanUpdate represents the result of updating Postman

@@ -24,11 +24,11 @@ type AnalyzerService interface {
 
 // Logger defines the logging interface
 type Logger interface {
-	Debug(msg string, fields ...interface{})
-	Info(msg string, fields ...interface{})
-	Warn(msg string, fields ...interface{})
-	Error(msg string, err error, fields ...interface{})
-	Fatal(msg string, err error, fields ...interface{})
+	Debug(msg string, fields ...any)
+	Info(msg string, fields ...any)
+	Warn(msg string, fields ...any)
+	Error(msg string, err error, fields ...any)
+	Fatal(msg string, err error, fields ...any)
 }
 
 // MetricsCollector defines the interface for collecting metrics
@@ -40,7 +40,7 @@ type MetricsCollector interface {
 
 // CircuitBreaker defines the interface for circuit breaker pattern
 type CircuitBreaker interface {
-	Execute(req func() (interface{}, error)) (interface{}, error)
+	Execute(req func() (any, error)) (any, error)
 	Name() string
 	State() string
 }
@@ -48,8 +48,8 @@ type CircuitBreaker interface {
 // HTTPClient defines the interface for HTTP operations
 type HTTPClient interface {
 	Get(ctx context.Context, url string) (*HTTPResponse, error)
-	Post(ctx context.Context, url string, body interface{}) (*HTTPResponse, error)
-	Put(ctx context.Context, url string, body interface{}) (*HTTPResponse, error)
+	Post(ctx context.Context, url string, body any) (*HTTPResponse, error)
+	Put(ctx context.Context, url string, body any) (*HTTPResponse, error)
 	Delete(ctx context.Context, url string) (*HTTPResponse, error)
 }
 

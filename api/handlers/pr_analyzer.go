@@ -69,7 +69,7 @@ func (h *PRAnalyzerHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"status":    "success",
 		"analysis":  analysisResp,
 		"timestamp": payload.PullRequest.UpdatedAt,

@@ -1,22 +1,38 @@
 package claude
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/sony/gobreaker"
-
+	
 	"github.com/igorsal/pr-documentator/internal/config"
 	"github.com/igorsal/pr-documentator/internal/interfaces"
 	"github.com/igorsal/pr-documentator/internal/models"
 	pkgerrors "github.com/igorsal/pr-documentator/pkg/errors"
 )
 
+const (
+	AnthropicVersion = "2023-06-01"
+	ContentTypeJSON = "application/json"
+	APIKeyHeader = "x-api-key"
+	VersionHeader = "anthropic-version"
+	MessagesEndpoint = "/v1/messages"
+	CircuitBreakerName = "claude-api"
+	MaxCircuitBreakerRequests = 3
+	CircuitBreakerInterval = 30 * time.Second
+	CircuitBreakerTimeout = 60 * time.Second
+	ConsecutiveFailureThreshold = 3
+	ShortHashLength = 7
+)
+
 type Client struct {
-	httpClient     *resty.Client // nolint
+	httpClient     *http.Client
 	config         config.ClaudeConfig
 	logger         interfaces.Logger
 	circuitBreaker interfaces.CircuitBreaker
@@ -25,25 +41,19 @@ type Client struct {
 
 // NewClient creates a new Claude API client with circuit breaker and metrics
 func NewClient(cfg config.ClaudeConfig, logger interfaces.Logger, metrics interfaces.MetricsCollector) *Client {
-	// Configure Resty client
-	client := resty.New(). // nolint
-				SetTimeout(cfg.Timeout).
-				SetRetryCount(3).
-				SetRetryWaitTime(1*time.Second).
-				SetRetryMaxWaitTime(5*time.Second).
-				SetHeader("Content-Type", "application/json").
-				SetHeader("x-api-key", cfg.APIKey).
-				SetHeader("anthropic-version", "2023-06-01").
-				SetBaseURL(cfg.BaseURL)
+	// Configure HTTP client
+	client := &http.Client{
+		Timeout: cfg.Timeout,
+	}
 
 	// Configure circuit breaker
 	cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{
-		Name:        "claude-api",
-		MaxRequests: 3,
-		Interval:    30 * time.Second,
-		Timeout:     60 * time.Second,
+		Name:        CircuitBreakerName,
+		MaxRequests: MaxCircuitBreakerRequests,
+		Interval:    CircuitBreakerInterval,
+		Timeout:     CircuitBreakerTimeout,
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
-			return counts.ConsecutiveFailures >= 3
+			return counts.ConsecutiveFailures >= ConsecutiveFailureThreshold
 		},
 		OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
 			logger.Info("Claude API circuit breaker state changed",
@@ -71,7 +81,7 @@ type circuitBreakerWrapper struct {
 	cb *gobreaker.CircuitBreaker
 }
 
-func (w *circuitBreakerWrapper) Execute(req func() (interface{}, error)) (interface{}, error) {
+func (w *circuitBreakerWrapper) Execute(req func() (any, error)) (any, error) {
 	return w.cb.Execute(req)
 }
 
@@ -99,7 +109,7 @@ func (c *Client) AnalyzePR(ctx context.Context, req models.AnalysisRequest) (*mo
 	)
 
 	// Execute with circuit breaker
-	result, err := c.circuitBreaker.Execute(func() (interface{}, error) {
+	result, err := c.circuitBreaker.Execute(func() (any, error) {
 		return c.executeAnalysis(ctx, req)
 	})
 
@@ -157,37 +167,63 @@ func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest
 		},
 		System: systemPrompt,
 		Tools:  []Tool{analysisToolSchema},
-		ToolChoice: map[string]interface{}{
+		ToolChoice: map[string]any{
 			"type": "tool",
 			"name": "analyze_api_changes",
 		},
 	}
 
-	var claudeResp ClaudeResponse
-	resp, err := c.httpClient.R().
-		SetContext(ctx).
-		SetBody(claudeReq).
-		SetResult(&claudeResp).
-		Post("/v1/messages")
+	// Marshal request body
+	body, err := json.Marshal(claudeReq)
+	if err != nil {
+		return nil, pkgerrors.NewExternalError("claude", "failed to marshal request").WithCause(err)
+	}
 
+	// Create HTTP request
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.BaseURL+MessagesEndpoint, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, pkgerrors.NewExternalError("claude", "failed to create request").WithCause(err)
+	}
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", ContentTypeJSON)
+	httpReq.Header.Set(APIKeyHeader, c.config.APIKey)
+	httpReq.Header.Set(VersionHeader, AnthropicVersion)
+
+	// Execute request
+	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, pkgerrors.NewExternalError("claude", err.Error()).WithCause(err)
 	}
+	defer resp.Body.Close()
 
-	if resp.IsError() {
-		errorMsg := fmt.Sprintf("HTTP %d: %s", resp.StatusCode(), string(resp.Body()))
+	// Read response body
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, pkgerrors.NewExternalError("claude", "failed to read response").WithCause(err)
+	}
+
+	// Handle HTTP errors
+	if resp.StatusCode >= 400 {
+		errorMsg := fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(respBody))
 
 		// Handle specific error cases
-		switch resp.StatusCode() {
+		switch resp.StatusCode {
 		case 401:
 			return nil, pkgerrors.NewUnauthorizedError("Invalid Claude API key")
 		case 429:
 			return nil, pkgerrors.NewRateLimitError("claude")
 		case 500, 502, 503, 504:
-			return nil, pkgerrors.NewUnavailableError("claude").WithContext("status_code", resp.StatusCode())
+			return nil, pkgerrors.NewUnavailableError("claude").WithContext("status_code", resp.StatusCode)
 		default:
 			return nil, pkgerrors.NewExternalError("claude", errorMsg)
 		}
+	}
+
+	// Parse response
+	var claudeResp ClaudeResponse
+	if err := json.Unmarshal(respBody, &claudeResp); err != nil {
+		return nil, pkgerrors.NewExternalError("claude", "failed to parse response").WithCause(err)
 	}
 
 	if len(claudeResp.Content) == 0 {
@@ -220,43 +256,41 @@ func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest
 
 func buildAnalysisPrompt(req models.AnalysisRequest) string {
 	return fmt.Sprintf(`
-Por favor, analise o Pull Request do GitHub a seguir para identificar mudanças na API e forneça uma resposta estruturada.
+Please analyze the following GitHub Pull Request to identify API changes and provide a structured response.
 
-**Detalhes do Pull Request:**
-- **Título:** %s
-- **Descrição:** %s
-- **Repositório:** %s
-- **Número:** %d
-- **URL do Diff:** %s
+**Pull Request Details:**
+- **Title:** %s
+- **Description:** %s
+- **Repository:** %s
+- **Number:** %d
+- **Diff URL:** %s
 
-**Instruções de Análise:**
-1. **Novas Rotas:** 
-   - Identifique novas rotas de API.
-   - Inclua método HTTP, caminho usando `+"`{{baseUrl}}`"+`, descrição, parâmetros, corpo da requisição e resposta.
-   - Exemplo: `+"`{{baseUrl}}/api/v1/users`"+`
+**Analysis Instructions:**
+1. **New Routes:** 
+   - Identify new API routes.
+   - Include HTTP method, path using `+"`{{baseUrl}}`"+`, description, parameters, request body and response.
+   - Example: `+"`{{baseUrl}}/api/v1/users`"+`
 
-2. **Rotas Modificadas:** 
-   - Detecte modificações em rotas existentes.
-   - Detalhe mudanças no método, caminho usando `+"`{{baseUrl}}`"+`, corpo da requisição e resposta.
+2. **Modified Routes:** 
+   - Detect modifications to existing routes.
+   - Detail changes in method, path using `+"`{{baseUrl}}`"+`, request body and response.
 
+3. **Postman Documentation:**
+   - Ensure each route has a clear and detailed description.
+   - Include request and response examples.
+   - Use environment variables like `+"`{{baseUrl}}`"+` for easy configuration.
 
+4. **Confidence:** 
+   - Provide a confidence score (0-1) about the analysis accuracy.
 
-4. **Documentação no Postman:**
-   - Certifique-se de que cada rota tem uma descrição clara e detalhada.
-   - Inclua exemplos de requisição e resposta.
-   - Use variáveis de ambiente como `+"`{{baseUrl}}`"+` para facilitar a configuração.
-
-5. **Confiança:** 
-   - Forneça uma pontuação de confiança (0-1) sobre a precisão da análise.
-
-**Contexto Adicional:**
+**Additional Context:**
 %s
 
-**Formato Esperado:**
-- **Novas Rotas:** [{ "method": "GET", "path": "{{baseUrl}}/api/v1/users", ... }]
-- **Rotas Modificadas:** [{ "method": "POST", "path": "{{baseUrl}}/api/v1/orders", (new payload) ) }]
-- **Resumo:** "Breve resumo das mudanças."
-- **Confiança:** 0.9
+**Expected Format:**
+- **New Routes:** [{ "method": "GET", "path": "{{baseUrl}}/api/v1/users", ... }]
+- **Modified Routes:** [{ "method": "POST", "path": "{{baseUrl}}/api/v1/orders", (new payload) ) }]
+- **Summary:** "Brief summary of changes."
+- **Confidence:** 0.9
 `, req.PullRequest.Title, req.PullRequest.Body, req.Repository.FullName, req.PullRequest.Number, req.PullRequest.DiffURL, req.Diff)
 }
 
@@ -336,7 +370,7 @@ func buildAnalysisToolSchema() Tool {
 }
 
 // convertToolInputToAnalysis converts Claude's tool input to our AnalysisResponse
-func (c *Client) convertToolInputToAnalysis(input map[string]interface{}) (*models.AnalysisResponse, error) {
+func (c *Client) convertToolInputToAnalysis(input map[string]any) (*models.AnalysisResponse, error) {
 	// Marshal and unmarshal to convert to our struct
 	jsonData, err := json.Marshal(input)
 	if err != nil {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/igorsal/pr-documentator/internal/interfaces"
@@ -35,10 +36,12 @@ func (h *HealthHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	version := getVersion()
+	
 	response := HealthResponse{
 		Status:    "healthy",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Version:   "1.0.0",
+		Version:   version,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -51,4 +54,27 @@ func (h *HealthHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Debug("Health check completed successfully")
+}
+
+// getVersion returns build version information
+func getVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		// Try to get version from VCS info
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				if len(setting.Value) > 7 {
+					return setting.Value[:7] // Short commit hash
+				}
+				return setting.Value
+			}
+		}
+		
+		// Fallback to module version if available
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			return info.Main.Version
+		}
+	}
+	
+	// Default fallback
+	return "dev"
 }

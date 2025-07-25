@@ -12,15 +12,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/igorsal/pr-documentator/api/handlers"
+	"github.com/igorsal/pr-documentator/api/middleware"
 	"github.com/igorsal/pr-documentator/internal/config"
-	"github.com/igorsal/pr-documentator/internal/handlers"
 	"github.com/igorsal/pr-documentator/internal/interfaces"
-	"github.com/igorsal/pr-documentator/internal/middleware"
 	"github.com/igorsal/pr-documentator/internal/services"
 	"github.com/igorsal/pr-documentator/io/claude"
 	"github.com/igorsal/pr-documentator/io/postman"
 	"github.com/igorsal/pr-documentator/pkg/logger"
 	"github.com/igorsal/pr-documentator/pkg/metrics"
+)
+
+const (
+	DefaultVersion = "2.0.0"
+	ShutdownTimeout = 30 * time.Second
+	IdleTimeout = 120 * time.Second
 )
 
 // Application holds all dependencies
@@ -42,7 +48,7 @@ func main() {
 	}
 
 	app.logger.Info("Starting PR Documentator service",
-		"version", "2.0.0",
+		"version", DefaultVersion,
 		"environment", os.Getenv("ENVIRONMENT"),
 	)
 
@@ -93,6 +99,7 @@ func (app *Application) setupServer() {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(app.logger, app.metrics)
 	prAnalyzerHandler := handlers.NewPRAnalyzerHandler(app.analyzerService, app.logger, app.metrics)
+	manualWebhookHandler := handlers.NewManualWebhookHandler(app.analyzerService, app.logger, app.metrics)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -107,6 +114,7 @@ func (app *Application) setupServer() {
 	// Public endpoints
 	router.HandleFunc("/health", healthHandler.Handle).Methods("GET")
 	router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	router.HandleFunc("/manual-analyze", manualWebhookHandler.Handle).Methods("POST")
 
 	// Protected endpoints
 	prRouter := router.PathPrefix("").Subrouter()
@@ -119,7 +127,7 @@ func (app *Application) setupServer() {
 		Handler:      router,
 		ReadTimeout:  app.config.Server.ReadTimeout,
 		WriteTimeout: app.config.Server.WriteTimeout,
-		IdleTimeout:  120 * time.Second,
+		IdleTimeout:  IdleTimeout,
 		// Add security headers
 		ErrorLog: nil, // Use our custom logger
 	}
@@ -148,15 +156,15 @@ func (app *Application) run() error {
 	}()
 
 	// Wait for interrupt signal or server error
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	select {
 	case err := <-serverErrors:
 		return fmt.Errorf("server failed to start: %w", err)
 
-	case sig := <-shutdown:
-		app.logger.Info("Shutdown signal received", "signal", sig.String())
+	case <-ctx.Done():
+		app.logger.Info("Shutdown signal received")
 		return app.gracefulShutdown()
 	}
 }
@@ -166,7 +174,7 @@ func (app *Application) gracefulShutdown() error {
 	app.logger.Info("Starting graceful shutdown")
 
 	// Create shutdown context with timeout
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
 	defer cancel()
 
 	// Track shutdown progress

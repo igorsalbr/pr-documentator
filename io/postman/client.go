@@ -1,12 +1,14 @@
 package postman
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/sony/gobreaker"
 
 	"github.com/igorsal/pr-documentator/internal/config"
@@ -16,7 +18,7 @@ import (
 )
 
 type Client struct {
-	httpClient     *resty.Client // nolint
+	httpClient     *http.Client
 	config         config.PostmanConfig
 	logger         interfaces.Logger
 	circuitBreaker interfaces.CircuitBreaker
@@ -25,15 +27,10 @@ type Client struct {
 
 // NewClient creates a new Postman API client with circuit breaker
 func NewClient(cfg config.PostmanConfig, logger interfaces.Logger, metrics interfaces.MetricsCollector) *Client {
-	// Configure Resty client
-	client := resty.New(). // nolint
-				SetTimeout(cfg.Timeout).
-				SetRetryCount(3).
-				SetRetryWaitTime(1*time.Second).
-				SetRetryMaxWaitTime(5*time.Second).
-				SetHeader("X-API-Key", cfg.APIKey).
-				SetHeader("Content-Type", "application/json").
-				SetBaseURL(cfg.BaseURL)
+	// Configure HTTP client
+	client := &http.Client{
+		Timeout: cfg.Timeout,
+	}
 
 	// Configure circuit breaker
 	cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{
@@ -70,7 +67,7 @@ type postmanCircuitBreakerWrapper struct {
 	cb *gobreaker.CircuitBreaker
 }
 
-func (w *postmanCircuitBreakerWrapper) Execute(req func() (interface{}, error)) (interface{}, error) {
+func (w *postmanCircuitBreakerWrapper) Execute(req func() (any, error)) (any, error) {
 	return w.cb.Execute(req)
 }
 
@@ -90,7 +87,7 @@ func (c *Client) GetCollection(ctx context.Context) (*models.PostmanCollection, 
 		"operation": "get_collection",
 	}
 
-	result, err := c.circuitBreaker.Execute(func() (interface{}, error) {
+	result, err := c.circuitBreaker.Execute(func() (any, error) {
 		return c.executeGetCollection(ctx)
 	})
 
@@ -109,18 +106,29 @@ func (c *Client) GetCollection(ctx context.Context) (*models.PostmanCollection, 
 }
 
 func (c *Client) executeGetCollection(ctx context.Context) (*models.PostmanCollection, error) {
-	var collectionResp models.PostmanCollectionResponse
-	resp, err := c.httpClient.R().
-		SetContext(ctx).
-		SetResult(&collectionResp).
-		Get(fmt.Sprintf("/collections/%s", c.config.CollectionID))
-
+	url := fmt.Sprintf("%s/collections/%s", c.config.BaseURL, c.config.CollectionID)
+	
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, pkgerrors.NewExternalError("postman", "failed to create request").WithCause(err)
+	}
+	
+	req.Header.Set("X-API-Key", c.config.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+	
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, pkgerrors.NewExternalError("postman", err.Error()).WithCause(err)
 	}
+	defer resp.Body.Close()
+	
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, pkgerrors.NewExternalError("postman", "failed to read response").WithCause(err)
+	}
 
-	if resp.IsError() {
-		switch resp.StatusCode() {
+	if resp.StatusCode >= 400 {
+		switch resp.StatusCode {
 		case 401:
 			return nil, pkgerrors.NewUnauthorizedError("Invalid Postman API key")
 		case 404:
@@ -128,8 +136,13 @@ func (c *Client) executeGetCollection(ctx context.Context) (*models.PostmanColle
 		case 429:
 			return nil, pkgerrors.NewRateLimitError("postman")
 		default:
-			return nil, pkgerrors.NewExternalError("postman", fmt.Sprintf("HTTP %d: %s", resp.StatusCode(), string(resp.Body())))
+			return nil, pkgerrors.NewExternalError("postman", fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(respBody)))
 		}
+	}
+
+	var collectionResp models.PostmanCollectionResponse
+	if err := json.Unmarshal(respBody, &collectionResp); err != nil {
+		return nil, pkgerrors.NewExternalError("postman", "failed to parse response").WithCause(err)
 	}
 
 	return &collectionResp.Collection, nil
@@ -173,7 +186,7 @@ func (c *Client) putCollection(ctx context.Context, collection *models.PostmanCo
 		"operation": "put_collection",
 	}
 
-	_, err := c.circuitBreaker.Execute(func() (interface{}, error) {
+	_, err := c.circuitBreaker.Execute(func() (any, error) {
 		return nil, c.executePutCollection(ctx, collection)
 	})
 
@@ -196,17 +209,29 @@ func (c *Client) executePutCollection(ctx context.Context, collection *models.Po
 		Collection: *collection,
 	}
 
-	resp, err := c.httpClient.R().
-		SetContext(ctx).
-		SetBody(updateReq).
-		Put(fmt.Sprintf("/collections/%s", c.config.CollectionID))
+	body, err := json.Marshal(updateReq)
+	if err != nil {
+		return pkgerrors.NewExternalError("postman", "failed to marshal request").WithCause(err)
+	}
 
+	url := fmt.Sprintf("%s/collections/%s", c.config.BaseURL, c.config.CollectionID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(body))
+	if err != nil {
+		return pkgerrors.NewExternalError("postman", "failed to create request").WithCause(err)
+	}
+
+	req.Header.Set("X-API-Key", c.config.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return pkgerrors.NewExternalError("postman", err.Error()).WithCause(err)
 	}
+	defer resp.Body.Close()
 
-	if resp.IsError() {
-		switch resp.StatusCode() {
+	if resp.StatusCode >= 400 {
+		respBody, _ := io.ReadAll(resp.Body)
+		switch resp.StatusCode {
 		case 401:
 			return pkgerrors.NewUnauthorizedError("Invalid Postman API key")
 		case 404:
@@ -214,7 +239,7 @@ func (c *Client) executePutCollection(ctx context.Context, collection *models.Po
 		case 429:
 			return pkgerrors.NewRateLimitError("postman")
 		default:
-			return pkgerrors.NewExternalError("postman", fmt.Sprintf("HTTP %d: %s", resp.StatusCode(), string(resp.Body())))
+			return pkgerrors.NewExternalError("postman", fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(respBody)))
 		}
 	}
 
@@ -311,8 +336,8 @@ func (c *Client) convertRouteToPostmanItem(route models.APIRoute) models.Postman
 		body = &models.PostmanBody{
 			Mode: "raw",
 			Raw:  string(bodyJSON),
-			Options: map[string]interface{}{
-				"raw": map[string]interface{}{
+			Options: map[string]any{
+				"raw": map[string]any{
 					"language": "json",
 				},
 			},

@@ -7,7 +7,7 @@ type ClaudeRequest struct {
 	Messages   []Message   `json:"messages"`
 	System     string      `json:"system,omitempty"`
 	Tools      []Tool      `json:"tools,omitempty"`
-	ToolChoice interface{} `json:"tool_choice,omitempty"`
+	ToolChoice any `json:"tool_choice,omitempty"`
 }
 
 // Message represents a message in the Claude conversation
@@ -56,7 +56,7 @@ type Content struct {
 	Type  string                 `json:"type"`
 	Text  string                 `json:"text,omitempty"`
 	Name  string                 `json:"name,omitempty"`
-	Input map[string]interface{} `json:"input,omitempty"`
+	Input map[string]any `json:"input,omitempty"`
 }
 
 // Usage represents token usage information

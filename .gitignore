@@ -71,3 +71,6 @@ coverage.out
 *.tar.gz
 *.zip
 .claude
+
+# Architecture documentation (contains sensitive internal details)
+ARCHITECTURE.md

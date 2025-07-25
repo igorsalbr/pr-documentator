@@ -5,8 +5,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -53,8 +51,6 @@ type LoggingConfig struct {
 
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
-	// Try to load .env file (ignore error if file doesn't exist)
-	_ = godotenv.Load()
 
 	cfg := &Config{
 		Server: ServerConfig{

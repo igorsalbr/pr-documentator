@@ -18,7 +18,7 @@ type ErrorDetail struct {
 	Type    string                 `json:"type"`
 	Message string                 `json:"message"`
 	Code    string                 `json:"code,omitempty"`
-	Context map[string]interface{} `json:"context,omitempty"`
+	Context map[string]any `json:"context,omitempty"`
 }
 
 // ErrorHandlerMiddleware provides centralized error handling

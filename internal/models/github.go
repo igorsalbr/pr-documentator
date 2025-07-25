@@ -9,6 +9,7 @@ type GitHubPRPayload struct {
 	PullRequest PullRequest `json:"pull_request"`
 	Repository  Repository  `json:"repository"`
 	Sender      User        `json:"sender"`
+	Diff        string      `json:"diff,omitempty"` // For manual analysis
 }
 
 // PullRequest represents a GitHub pull request
