@@ -203,6 +203,19 @@ func (s *AnalyzerService) AnalyzePR(ctx context.Context, payload models.GitHubPR
 		Diff:        diff,
 	}
 
+	// Get existing collection context for better analysis
+	existingCollection, err := s.postmanClient.GetCollection(ctx)
+	if err != nil {
+		s.logger.Warn("Failed to get existing collection context", "error", err)
+		// Continue without context - don't fail the entire operation
+	}
+
+	// Add collection context to analysis request
+	if existingCollection != nil {
+		analysisReq.ExistingRoutes = s.extractRoutesFromCollection(existingCollection)
+		s.logger.Info("Added collection context", "existing_routes", len(analysisReq.ExistingRoutes))
+	}
+
 	// Analyze with Claude
 	analysisResp, err := s.claudeClient.AnalyzePR(ctx, analysisReq)
 	if err != nil {
@@ -302,4 +315,61 @@ func (s *AnalyzerService) fetchPRDiff(ctx context.Context, diffURL string) (stri
 
 func (s *AnalyzerService) hasAPIChanges(resp *models.AnalysisResponse) bool {
 	return len(resp.NewRoutes) > 0 || len(resp.ModifiedRoutes) > 0 || len(resp.DeletedRoutes) > 0
+}
+
+// extractRoutesFromCollection extracts existing routes from Postman collection for context
+func (s *AnalyzerService) extractRoutesFromCollection(collection *models.PostmanCollection) []models.ExistingRoute {
+	var routes []models.ExistingRoute
+	
+	// Process items recursively to handle folders
+	s.extractRoutesFromItems(collection.Items, []string{}, &routes)
+	
+	return routes
+}
+
+// extractRoutesFromItems recursively extracts routes from collection items
+func (s *AnalyzerService) extractRoutesFromItems(items []models.PostmanItem, folderPath []string, routes *[]models.ExistingRoute) {
+	for _, item := range items {
+		if item.Request != nil {
+			// This is a request item
+			route := models.ExistingRoute{
+				Method:      item.Request.Method,
+				Path:        s.extractPathFromURL(item.Request.URL),
+				Name:        item.Name,
+				Description: item.Description,
+				FolderPath:  append([]string{}, folderPath...), // Copy slice
+			}
+			*routes = append(*routes, route)
+		} else if len(item.Items) > 0 {
+			// This is a folder - recurse into it
+			newFolderPath := append(folderPath, item.Name)
+			s.extractRoutesFromItems(item.Items, newFolderPath, routes)
+		}
+	}
+}
+
+// extractPathFromURL extracts the clean path from Postman URL structure
+func (s *AnalyzerService) extractPathFromURL(url models.PostmanURL) string {
+	if url.Raw != "" {
+		// Remove {{baseUrl}} and clean up the path
+		path := url.Raw
+		if len(path) > 0 && path[0:11] == "{{baseUrl}}" {
+			path = path[11:]
+		}
+		return path
+	}
+	
+	// Fallback to constructing from path segments
+	if len(url.Path) > 1 {
+		// Skip {{baseUrl}} if present
+		pathSegments := url.Path
+		if len(pathSegments) > 0 && pathSegments[0] == "{{baseUrl}}" {
+			pathSegments = pathSegments[1:]
+		}
+		if len(pathSegments) > 0 {
+			return "/" + pathSegments[0]
+		}
+	}
+	
+	return "/"
 }

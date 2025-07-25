@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/sony/gobreaker"
@@ -255,43 +256,67 @@ func (c *Client) executeAnalysis(ctx context.Context, req models.AnalysisRequest
 // Remove obsolete function - now using Resty in executeAnalysis
 
 func buildAnalysisPrompt(req models.AnalysisRequest) string {
+	existingRoutesContext := ""
+	if len(req.ExistingRoutes) > 0 {
+		existingRoutesContext = "\n**Existing API Routes in Collection:**\n"
+		for _, route := range req.ExistingRoutes {
+			folderInfo := ""
+			if len(route.FolderPath) > 0 {
+				folderInfo = fmt.Sprintf(" (in folder: %s)", strings.Join(route.FolderPath, " > "))
+			}
+			existingRoutesContext += fmt.Sprintf("- %s %s - %s%s\n", route.Method, route.Path, route.Name, folderInfo)
+		}
+		existingRoutesContext += "\n**IMPORTANT:** Use this context to determine if detected changes are:\n"
+		existingRoutesContext += "- **NEW**: Route doesn't exist in collection\n"
+		existingRoutesContext += "- **MODIFIED**: Route exists but has changes\n"
+		existingRoutesContext += "- **DELETED**: Route exists in collection but removed from code\n"
+	}
+
 	return fmt.Sprintf(`
 Please analyze the following GitHub Pull Request to identify API changes and provide a structured response.
 
 **Pull Request Details:**
 - **Title:** %s
-- **Description:** %s
+- **Description:** %s  
 - **Repository:** %s
 - **Number:** %d
 - **Diff URL:** %s
 
-**Analysis Instructions:**
-1. **New Routes:** 
-   - Identify new API routes.
-   - Include HTTP method, path using `+"`{{baseUrl}}`"+`, description, parameters, request body and response.
-   - Example: `+"`{{baseUrl}}/api/v1/users`"+`
-
-2. **Modified Routes:** 
-   - Detect modifications to existing routes.
-   - Detail changes in method, path using `+"`{{baseUrl}}`"+`, request body and response.
-
-3. **Postman Documentation:**
-   - Ensure each route has a clear and detailed description.
-   - Include request and response examples.
-   - Use environment variables like `+"`{{baseUrl}}`"+` for easy configuration.
-
-4. **Confidence:** 
-   - Provide a confidence score (0-1) about the analysis accuracy.
-
-**Additional Context:**
 %s
 
-**Expected Format:**
-- **New Routes:** [{ "method": "GET", "path": "{{baseUrl}}/api/v1/users", ... }]
-- **Modified Routes:** [{ "method": "POST", "path": "{{baseUrl}}/api/v1/orders", (new payload) ) }]
-- **Summary:** "Brief summary of changes."
-- **Confidence:** 0.9
-`, req.PullRequest.Title, req.PullRequest.Body, req.Repository.FullName, req.PullRequest.Number, req.PullRequest.DiffURL, req.Diff)
+**Analysis Instructions:**
+1. **CRUD Operation Detection:**
+   - Compare PR changes against existing routes above
+   - Classify each change as CREATE (new), UPDATE (modified), or DELETE (removed)
+   - Consider folder organization when suggesting where new routes should be placed
+
+2. **New Routes:** 
+   - Only include routes NOT in the existing collection
+   - Include HTTP method, path, description, parameters, request body and response
+   - Suggest appropriate folder placement based on existing organization
+
+3. **Modified Routes:** 
+   - Only include routes that exist in collection but have changes
+   - Detail what specifically changed (method, path, parameters, etc.)
+
+4. **Deleted Routes:**
+   - Include routes from collection that are no longer in the codebase
+   - Provide reason for removal/deprecation
+
+5. **Postman Documentation:**
+   - Ensure each route has clear, detailed descriptions
+   - Include request and response examples
+   - Use {{baseUrl}} for environment variables
+   - Respect existing folder structure
+
+6. **Confidence:** 
+   - Provide confidence score (0-1) based on analysis accuracy
+
+**PR Diff to Analyze:**
+%s
+
+**Expected Output:** Use the analyze_api_changes tool with structured data for new_routes, modified_routes, deleted_routes, summary, and confidence.
+`, req.PullRequest.Title, req.PullRequest.Body, req.Repository.FullName, req.PullRequest.Number, req.PullRequest.DiffURL, existingRoutesContext, req.Diff)
 }
 
 // buildAnalysisToolSchema creates the JSON schema for the analysis tool
