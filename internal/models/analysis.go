@@ -1,11 +1,13 @@
 package models
 
+import "time"
+
 // AnalysisRequest represents the request to analyze a PR
 type AnalysisRequest struct {
-	PullRequest    PullRequest       `json:"pull_request"`
-	Repository     Repository        `json:"repository"`
-	Diff           string            `json:"diff,omitempty"`
-	ExistingRoutes []ExistingRoute   `json:"existing_routes,omitempty"`
+	PullRequest    PullRequest     `json:"pull_request"`
+	Repository     Repository      `json:"repository"`
+	Diff           string          `json:"diff,omitempty"`
+	ExistingRoutes []ExistingRoute `json:"existing_routes,omitempty"`
 }
 
 // ExistingRoute represents a route already documented in the collection
@@ -68,4 +70,14 @@ type PostmanUpdate struct {
 	ItemsDeleted  int    `json:"items_deleted"`
 	ErrorMessage  string `json:"error_message,omitempty"`
 	UpdatedAt     string `json:"updated_at"`
+}
+
+// UserSession represents a user session with their credentials
+type UserSession struct {
+	ClaudeAPIKey        string    `json:"claude_api_key"`
+	PostmanAPIKey       string    `json:"postman_api_key"`
+	PostmanWorkspaceID  string    `json:"postman_workspace_id"`
+	PostmanCollectionID string    `json:"postman_collection_id"`
+	CreatedAt           time.Time `json:"created_at"`
+	ExpiresAt           time.Time `json:"expires_at"`
 }

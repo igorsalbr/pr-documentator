@@ -37,6 +37,7 @@ type Application struct {
 	claudeClient    interfaces.ClaudeClient
 	postmanClient   interfaces.PostmanClient
 	analyzerService interfaces.AnalyzerService
+	tokenManager    interfaces.TokenManager
 	server          *http.Server
 }
 
@@ -77,6 +78,7 @@ func initializeApplication() (*Application, error) {
 
 	// Initialize services
 	analyzerService := services.NewAnalyzerService(claudeClient, postmanClient, logger, metrics)
+	tokenManager := services.NewTokenManager(logger)
 
 	// Create application
 	app := &Application{
@@ -86,6 +88,7 @@ func initializeApplication() (*Application, error) {
 		claudeClient:    claudeClient,
 		postmanClient:   postmanClient,
 		analyzerService: analyzerService,
+		tokenManager:    tokenManager,
 	}
 
 	// Setup HTTP server
@@ -100,6 +103,8 @@ func (app *Application) setupServer() {
 	healthHandler := handlers.NewHealthHandler(app.logger, app.metrics)
 	prAnalyzerHandler := handlers.NewPRAnalyzerHandler(app.analyzerService, app.logger, app.metrics)
 	manualWebhookHandler := handlers.NewManualWebhookHandler(app.analyzerService, app.logger, app.metrics)
+	authHandler := handlers.NewAuthHandler(app.tokenManager, app.logger, app.metrics)
+	webAnalyzeHandler := handlers.NewWebAnalyzeHandler(app.tokenManager, app.logger, app.metrics)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -115,11 +120,17 @@ func (app *Application) setupServer() {
 	router.HandleFunc("/health", healthHandler.Handle).Methods("GET")
 	router.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	router.HandleFunc("/manual-analyze", manualWebhookHandler.Handle).Methods("POST")
+	router.HandleFunc("/auth", authHandler.Handle).Methods("POST")
 
-	// Protected endpoints
+	// Protected endpoints (GitHub webhook)
 	prRouter := router.PathPrefix("").Subrouter()
 	prRouter.Use(middleware.GitHubWebhookAuth(app.config.GitHub.WebhookSecret, app.logger))
 	prRouter.HandleFunc("/analyze-pr", prAnalyzerHandler.Handle).Methods("POST")
+
+	// Token-protected endpoints
+	webRouter := router.PathPrefix("/web").Subrouter()
+	webRouter.Use(middleware.TokenAuthMiddleware(app.tokenManager, app.logger))
+	webRouter.HandleFunc("/analyze", webAnalyzeHandler.Handle).Methods("POST")
 
 	// Setup server with robust configuration
 	app.server = &http.Server{
@@ -186,6 +197,9 @@ func (app *Application) gracefulShutdown() error {
 			shutdownComplete <- fmt.Errorf("server shutdown failed: %w", err)
 			return
 		}
+
+		// Close token manager
+		app.tokenManager.Stop()
 
 		// Close other resources if needed (database connections, etc.)
 		app.logger.Info("All services shutdown successfully")
