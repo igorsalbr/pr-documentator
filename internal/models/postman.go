@@ -64,8 +64,8 @@ type PostmanHeader struct {
 
 // PostmanBody represents a request body in Postman
 type PostmanBody struct {
-	Mode    string                 `json:"mode"` // raw, formdata, urlencoded, etc.
-	Raw     string                 `json:"raw,omitempty"`
+	Mode    string         `json:"mode"` // raw, formdata, urlencoded, etc.
+	Raw     string         `json:"raw,omitempty"`
 	Options map[string]any `json:"options,omitempty"`
 }
 
@@ -79,15 +79,15 @@ type PostmanQueryParam struct {
 
 // PostmanVariable represents a variable
 type PostmanVariable struct {
-	Key         string      `json:"key"`
-	Value       any `json:"value"`
-	Type        string      `json:"type,omitempty"`
-	Description string      `json:"description,omitempty"`
+	Key         string `json:"key"`
+	Value       any    `json:"value"`
+	Type        string `json:"type,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // PostmanAuth represents authentication
 type PostmanAuth struct {
-	Type   string                 `json:"type"`
+	Type   string         `json:"type"`
 	Config map[string]any `json:"config,omitempty"`
 }
 

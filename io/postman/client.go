@@ -107,21 +107,21 @@ func (c *Client) GetCollection(ctx context.Context) (*models.PostmanCollection, 
 
 func (c *Client) executeGetCollection(ctx context.Context) (*models.PostmanCollection, error) {
 	url := fmt.Sprintf("%s/collections/%s", c.config.BaseURL, c.config.CollectionID)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, pkgerrors.NewExternalError("postman", "failed to create request").WithCause(err)
 	}
-	
+
 	req.Header.Set("X-API-Key", c.config.APIKey)
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, pkgerrors.NewExternalError("postman", err.Error()).WithCause(err)
 	}
 	defer resp.Body.Close()
-	
+
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, pkgerrors.NewExternalError("postman", "failed to read response").WithCause(err)

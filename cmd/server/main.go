@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	DefaultVersion = "2.0.0"
+	DefaultVersion  = "2.0.0"
 	ShutdownTimeout = 30 * time.Second
-	IdleTimeout = 120 * time.Second
+	IdleTimeout     = 120 * time.Second
 )
 
 // Application holds all dependencies

@@ -21,11 +21,11 @@ const (
 
 // AppError represents a structured application error
 type AppError struct {
-	Type       ErrorType              `json:"type"`
-	Message    string                 `json:"message"`
-	Code       string                 `json:"code,omitempty"`
-	StatusCode int                    `json:"status_code"`
-	Cause      error                  `json:"-"`
+	Type       ErrorType      `json:"type"`
+	Message    string         `json:"message"`
+	Code       string         `json:"code,omitempty"`
+	StatusCode int            `json:"status_code"`
+	Cause      error          `json:"-"`
 	Context    map[string]any `json:"context,omitempty"`
 }
 

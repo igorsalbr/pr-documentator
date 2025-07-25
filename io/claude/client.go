@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sony/gobreaker"
-	
+
 	"github.com/igorsal/pr-documentator/internal/config"
 	"github.com/igorsal/pr-documentator/internal/interfaces"
 	"github.com/igorsal/pr-documentator/internal/models"
@@ -18,17 +18,17 @@ import (
 )
 
 const (
-	AnthropicVersion = "2023-06-01"
-	ContentTypeJSON = "application/json"
-	APIKeyHeader = "x-api-key"
-	VersionHeader = "anthropic-version"
-	MessagesEndpoint = "/v1/messages"
-	CircuitBreakerName = "claude-api"
-	MaxCircuitBreakerRequests = 3
-	CircuitBreakerInterval = 30 * time.Second
-	CircuitBreakerTimeout = 60 * time.Second
+	AnthropicVersion            = "2023-06-01"
+	ContentTypeJSON             = "application/json"
+	APIKeyHeader                = "x-api-key"
+	VersionHeader               = "anthropic-version"
+	MessagesEndpoint            = "/v1/messages"
+	CircuitBreakerName          = "claude-api"
+	MaxCircuitBreakerRequests   = 3
+	CircuitBreakerInterval      = 30 * time.Second
+	CircuitBreakerTimeout       = 60 * time.Second
 	ConsecutiveFailureThreshold = 3
-	ShortHashLength = 7
+	ShortHashLength             = 7
 )
 
 type Client struct {

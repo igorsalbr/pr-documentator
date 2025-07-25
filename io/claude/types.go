@@ -2,12 +2,12 @@ package claude
 
 // ClaudeRequest represents a request to the Claude API
 type ClaudeRequest struct {
-	Model      string      `json:"model"`
-	MaxTokens  int         `json:"max_tokens"`
-	Messages   []Message   `json:"messages"`
-	System     string      `json:"system,omitempty"`
-	Tools      []Tool      `json:"tools,omitempty"`
-	ToolChoice any `json:"tool_choice,omitempty"`
+	Model      string    `json:"model"`
+	MaxTokens  int       `json:"max_tokens"`
+	Messages   []Message `json:"messages"`
+	System     string    `json:"system,omitempty"`
+	Tools      []Tool    `json:"tools,omitempty"`
+	ToolChoice any       `json:"tool_choice,omitempty"`
 }
 
 // Message represents a message in the Claude conversation
@@ -53,9 +53,9 @@ type ClaudeResponse struct {
 
 // Content represents the content in Claude's response
 type Content struct {
-	Type  string                 `json:"type"`
-	Text  string                 `json:"text,omitempty"`
-	Name  string                 `json:"name,omitempty"`
+	Type  string         `json:"type"`
+	Text  string         `json:"text,omitempty"`
+	Name  string         `json:"name,omitempty"`
 	Input map[string]any `json:"input,omitempty"`
 }
 

@@ -37,7 +37,7 @@ func (h *HealthHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	version := getVersion()
-	
+
 	response := HealthResponse{
 		Status:    "healthy",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
@@ -68,13 +68,13 @@ func getVersion() string {
 				return setting.Value
 			}
 		}
-		
+
 		// Fallback to module version if available
 		if info.Main.Version != "" && info.Main.Version != "(devel)" {
 			return info.Main.Version
 		}
 	}
-	
+
 	// Default fallback
 	return "dev"
 }

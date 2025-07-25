@@ -19,34 +19,34 @@ type AnalysisResponse struct {
 
 // APIRoute represents an API route with its details
 type APIRoute struct {
-	Method      string                 `json:"method"`
-	Path        string                 `json:"path"`
-	Description string                 `json:"description"`
-	Parameters  []Parameter            `json:"parameters,omitempty"`
+	Method      string         `json:"method"`
+	Path        string         `json:"path"`
+	Description string         `json:"description"`
+	Parameters  []Parameter    `json:"parameters,omitempty"`
 	RequestBody map[string]any `json:"request_body,omitempty"`
 	Response    map[string]any `json:"response,omitempty"`
-	Headers     []Header               `json:"headers,omitempty"`
-	Tags        []string               `json:"tags,omitempty"`
-	Deprecated  bool                   `json:"deprecated,omitempty"`
+	Headers     []Header       `json:"headers,omitempty"`
+	Tags        []string       `json:"tags,omitempty"`
+	Deprecated  bool           `json:"deprecated,omitempty"`
 }
 
 // Parameter represents an API parameter
 type Parameter struct {
-	Name        string      `json:"name"`
-	In          string      `json:"in"` // query, path, header, body
-	Type        string      `json:"type"`
-	Required    bool        `json:"required"`
-	Description string      `json:"description"`
-	Default     any `json:"default,omitempty"`
-	Example     any `json:"example,omitempty"`
+	Name        string `json:"name"`
+	In          string `json:"in"` // query, path, header, body
+	Type        string `json:"type"`
+	Required    bool   `json:"required"`
+	Description string `json:"description"`
+	Default     any    `json:"default,omitempty"`
+	Example     any    `json:"example,omitempty"`
 }
 
 // Header represents an HTTP header
 type Header struct {
-	Name        string      `json:"name"`
-	Required    bool        `json:"required"`
-	Description string      `json:"description"`
-	Example     any `json:"example,omitempty"`
+	Name        string `json:"name"`
+	Required    bool   `json:"required"`
+	Description string `json:"description"`
+	Example     any    `json:"example,omitempty"`
 }
 
 // PostmanUpdate represents the result of updating Postman
