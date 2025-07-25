@@ -2,9 +2,19 @@ package models
 
 // AnalysisRequest represents the request to analyze a PR
 type AnalysisRequest struct {
-	PullRequest PullRequest `json:"pull_request"`
-	Repository  Repository  `json:"repository"`
-	Diff        string      `json:"diff,omitempty"`
+	PullRequest    PullRequest       `json:"pull_request"`
+	Repository     Repository        `json:"repository"`
+	Diff           string            `json:"diff,omitempty"`
+	ExistingRoutes []ExistingRoute   `json:"existing_routes,omitempty"`
+}
+
+// ExistingRoute represents a route already documented in the collection
+type ExistingRoute struct {
+	Method      string   `json:"method"`
+	Path        string   `json:"path"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	FolderPath  []string `json:"folder_path,omitempty"` // For nested folders
 }
 
 // AnalysisResponse represents the structured response from Claude
